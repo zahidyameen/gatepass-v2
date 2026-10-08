@@ -29,6 +29,8 @@ try {
     if (!empty($date)) {
         $q .= " AND TO_CHAR(M.DATED, 'DD-MON-YY') = :date";
         $params[':date'] = $date;
+    }else {
+        $q .= " AND M.DATED >= TRUNC(SYSDATE) - 60";
     }
 
     // 3. Dynamically append Unit condition if provided
