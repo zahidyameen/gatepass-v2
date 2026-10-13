@@ -8,7 +8,10 @@ if (isset($_FILES['filename']) && isset($_POST['name']) && isset($_POST['user'])
     $name = $_POST['name'];
     $user = $_POST['user'];
     $date = $_POST['date'];
-    $unit = $_POST['unit'];
+   // $unit = $_POST['unit'];
+
+    $unit = isset($_POST['unit']) ? trim($_POST['unit']) : '';
+
     $imageUrl="smb://10.1.0.9/igp_pic/$name";
     $urlToSave="\\\\10.1.0.9\\igp_pic\\$name";
     try {
@@ -29,12 +32,22 @@ if (isset($_FILES['filename']) && isset($_POST['name']) && isset($_POST['user'])
         }
         curl_close($ch);
 
-        $q = "INSERT INTO MAIN_GATE_PASS_M (DOC_NO,DOC_ID,DOC_TYPE,DATED,STATUS,INS_USER,PIC_PATH,INTIME,UNIT)
-              SELECT NVL(MAX(TO_NUMBER(SUBSTR(M.DOC_NO,1,LENGTH(M.DOC_NO)-3))),0)+1||TO_CHAR(SYSDATE,'-YY') ,NVL(MAX(M.DOC_ID),0)+1,'IGP',
-              TRUNC(TO_DATE('$date', 'DD-MM-YYYY HH:MI:SS AM')),0,'tab','$urlToSave',
-              TO_CHAR(SYSDATE,'HH24:MI'), $unit
+        $q='';
+
+         if ($unit === '1' || $unit === '') {
+            $q = "INSERT INTO MAIN_GATE_PASS_M (DOC_NO,DOC_ID,DOC_TYPE,DATED,STATUS,INS_USER,PIC_PATH,INTIME)
+              SELECT NVL(MAX(TO_NUMBER(SUBSTR(M.DOC_NO,1,LENGTH(M.DOC_NO)-3))),0)+1||TO_CHAR(SYSDATE,'-YY') ,NVL(MAX(M.DOC_ID),0)+1,'IGP',trunc(SYSDATE),0,'$user','$urlToSave',
+              TO_CHAR(SYSDATE,'HH24:MI')
               FROM MAIN_GATE_PASS_M M
               WHERE TO_CHAR(M.DATED,'YY')=TO_CHAR(SYSDATE,'YY')";
+        } 
+        else{
+            $q = "INSERT INTO MAIN_GATE_PASS_M (DOC_NO,DOC_ID,DOC_TYPE,DATED,STATUS,INS_USER,PIC_PATH,INTIME,UNIT)
+                SELECT NVL(MAX(TO_NUMBER(SUBSTR(M.DOC_NO,1,LENGTH(M.DOC_NO)-3))),0)+1||TO_CHAR(SYSDATE,'-YY') ,NVL(MAX(M.DOC_ID),0)+1,'IGP',trunc(SYSDATE),0,'$user','$urlToSave',
+                TO_CHAR(SYSDATE,'HH24:MI'),$unit
+                FROM MAIN_GATE_PASS_M M
+                WHERE TO_CHAR(M.DATED,'YY')=TO_CHAR(SYSDATE,'YY')";
+        }
 
         $statement = $conn->prepare($q);
         $statement->execute();
